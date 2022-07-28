@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include "astar.h"
 
 typedef struct Heap
 {
@@ -9,10 +8,6 @@ typedef struct Heap
     int len;
     int capacity;
 } Heap;
-
-int ipow(int b, int e);
-void swap(Node* e1, Node* e2);
-int less_expensive(Heap* heap, int i, int k);
 
 Heap* heap_init(Node** init_array, int caplen);
 void heap_destroy(Heap* heap);

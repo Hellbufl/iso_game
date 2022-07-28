@@ -161,26 +161,6 @@ int heap_height(Heap* heap)
     return (int) (log((double) heap->len) / log(2.0)) + 1;
 }
 
-// void heap_show(Heap* heap)
-// {
-//     int height = heap_height(heap);
-
-//     if(height > 1)
-//         printf("%d \n", heap->elements[0]->F);
-
-//     for(int i = 0; i < height - 2; i++)
-//     {
-//         int indx = ipow(2, i + 1);
-
-//         for(int j = 0; j < indx; j++)
-//         {
-//             printf("%d ", heap->elements[indx + j -1]->F);
-//         }
-
-//         printf("\n");
-//     }
-// }
-
 void heap_show(Heap* heap)
 {
     int height = heap_height(heap);
@@ -208,21 +188,21 @@ void heap_show(Heap* heap)
 
 // TESTING //
 
-int main(void)
-{
-    Heap* test_heap = heap_init(NULL, 20);
+// int main(void)
+// {
+//     Heap* test_heap = heap_init(NULL, 20);
 
-    srand((unsigned) time(NULL));
+//     srand((unsigned) time(NULL));
 
-    for (int i = 0; i < 10; i++)
-    {
-        Node* test_node = (Node*) calloc(1, sizeof(Node));
-        test_node->F = rand() % 500;
-        heap_add(test_heap, test_node);
-    }
-    heap_show(test_heap);
+//     for (int i = 0; i < 10; i++)
+//     {
+//         Node* test_node = (Node*) calloc(1, sizeof(Node));
+//         test_node->F = rand() % 500;
+//         heap_add(test_heap, test_node);
+//     }
+//     heap_show(test_heap);
 
-    heap_obliterate(test_heap);
+//     heap_obliterate(test_heap);
 
-    return 0;
-}
+//     return 0;
+// }

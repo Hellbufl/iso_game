@@ -29,7 +29,6 @@ int ipow(int b, int e)
         result *= b;
 
     return result;
-
 }
 
 float float_abs(float x)

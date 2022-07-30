@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 typedef struct AStar
 {
@@ -21,3 +22,5 @@ AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_
 void ass_reset(AStar* ass);
 int get_neighbours(AStar* ass, Node* node);
 void ass_step(AStar* ass);
+NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last);
+int ass_raycast(AStar* ass, Node* start, Node* end);

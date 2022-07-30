@@ -87,12 +87,14 @@ NodeArray* narr_init(Node** init_arr, int len_or_cap)
     return narr;
 }
 
-void narr_expand(NodeArray* narr)
+void narr_expand(NodeArray* narr, int add_cap)
 {
-    new_elements = (Node**) calloc(2 * n, sizeof(Node*));
-    narr->cap *= 2;
+    if (add_cap <= 0) add_cap = narr->cap;
 
-    for (int i = 0; i < n; i++)
+    new_elements = (Node**) calloc(narr->cap + add_cap, sizeof(Node*));
+    narr->cap += add_cap;
+
+    for (int i = 0; i < narr->len; i++)
         new_elements[i] = narr->elements[i];
     
     free(narr->elements);
@@ -127,7 +129,7 @@ void narr_set(NodeArray* narr, int i, Node* node)
 void narr_add(NodeArray* narr, Node* node)
 {
     if (narr->len == narr->cap)
-        narr_expand(narr);
+        narr_expand(narr, 0);
 
     heap->elements[heap->len] = node;
     heap->len += 1;
@@ -151,4 +153,19 @@ int narr_contains(NodeArray* narr, Node* node)
         if (narr->nodes[i] == node) return 1;
     }
     return 0;
+}
+
+void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
+{
+    while (i < 0) i += narr_1->len;
+    while (k < 0) k += narr_2->len;
+
+    narr_expand(narr_1, narr_2->cap);
+
+    while (i < narr_1->len + narr_2->len)
+    {
+        narr_1->elements[i] = narr_2->elements[k];
+        i++;
+        k++;
+    }
 }

@@ -37,3 +37,4 @@ void narr_set(NodeArray* narr, int i, Node* node);
 void narr_add(NodeArray* narr, Node* node);
 void narr_remove(NodeArray* narr, Node* node);
 int narr_contains(NodeArray* narr, Node* node);
+void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k);

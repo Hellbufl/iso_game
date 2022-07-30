@@ -9,14 +9,15 @@ typedef struct AStar
 
     struct Node* start;
     struct Node* dest;
-    struct Heap* heap_open;
-    struct Node** closed;
-    int closed_len;
-    int found;
+    struct NodeHeap* open_heap;
+    struct NodeArray* closed_narr;
+
     int stepcount;
+    int found;
 
 } AStar;
 
-AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_start, Node* init_dest)
+AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_start, Node* init_dest);
 void ass_reset(AStar* ass);
-int get_neighbours(AStar* ass, Node* node, Node* nbs_arr[]);
+int get_neighbours(AStar* ass, Node* node);
+void ass_step(AStar* ass);

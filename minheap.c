@@ -3,47 +3,51 @@
 
 // heap functions //
 
-// caplen is capacity or length depending on if the array pointer is null or not
-Heap* heap_init(Node** init_array, int caplen)
-{
-    Heap* heap = (Heap*) calloc(1, sizeof(Heap));
+// // n is heap capacity when no init array (NULL) is given
+// NodeHeap* heap_init(Node** init_arr, int n)
+// {
+//     NodeHeap* heap = (NodeHeap*) calloc(1, sizeof(NodeHeap));
 
-    // no initializer array -> empty heap with caplen as capacity
-    if (init_array == NULL)
-    {
-        heap->elements = (Node**) calloc(caplen, sizeof(Node*));
-        heap->len = 0;
-        heap->capacity = caplen;
+//     // no init array -> empty heap with n as capacity
+//     if (init_narr == NULL)
+//     {
+//         heap->elements = (Node**) calloc(caplen, sizeof(Node*));
+//         heap->len = 0;
+//         heap->cap = n;
 
-        return heap;
-    }
+//         return heap;
+//     }
 
-    // copy init array to new heap with 2*caplen as capacity
+//     // copy init array to new heap with 2x capacity
 
-    heap->elements = (Node**) calloc(2 * caplen, sizeof(Node*));
-    heap->len = caplen;
-    heap->capacity = 2 * caplen;
+//     heap->elements = (Node**) calloc(2 * n, sizeof(Node*));
+//     heap->len = n;
+//     heap->cap = 2 * n;
 
-    for (int i = 0; i < caplen; i++)
-        heap->elements[i] = init_array[i];
+//     for (int i = 0; i < n; i++)
+//         heap->elements[i] = init_arr[i];
 
-    return heap;
-}
+//     return heap;
+// }
 
-void heap_destroy(Heap* heap)
-{
-    free(heap->elements);
-    free(heap);
-}
+// // does not free the nodes
+// void heap_destroy(NodeHeap* heap)
+// {
+//     free(heap->elements);
+//     free(heap);
+// }
 
-void heap_obliterate(Heap* heap)
-{
-    for (int i = 0; i < heap->len; i++)
-        free(heap->elements[i]);
-    heap_destroy(heap);
-}
+// // does free the nodes
+// void heap_obliterate(NodeHeap* heap)
+// {
+//     for (int i = 0; i < heap->len; i++)
+//         free(heap->elements[i]);
 
-void heap_sortup(Heap* heap, int i)
+//     heap_destroy(heap);
+// }
+
+// void heap_sortup(NodeHeap* heap, int i)
+void heap_sortup(NodeArray* heap, int i)
 {
     if (i <= 0) return;
 
@@ -61,7 +65,8 @@ void heap_sortup(Heap* heap, int i)
     heap_sortup(heap, ip);
 }
 
-void heap_sortdown(Heap* heap)
+// void heap_sortdown(NodeHeap* heap)
+void heap_sortdown(NodeArray* heap)
 {
     int height = heap_height(heap);
     int n = heap->len - ipow(2, height - 1) + 1;
@@ -93,14 +98,11 @@ void heap_sortdown(Heap* heap)
     }
 }
 
-void heap_add(Heap* heap, Node* node)
+// void heap_add(NodeHeap* heap, Node* node)
+void heap_add(NodeArray* heap, Node* node)
 {
-    if (heap->len == heap->capacity)
-    {
-        Heap* new_heap = heap_init(heap->elements, heap->len);
-        heap_destroy(heap);
-        heap = new_heap;
-    }
+    if (heap->len == heap->cap)
+        narr_expand(heap);
 
     heap->elements[heap->len] = node;
     heap->len += 1;
@@ -108,7 +110,8 @@ void heap_add(Heap* heap, Node* node)
     heap_sortup(heap, heap->len - 1);
 }
 
-Node* heap_take(Heap* heap)
+// Node* heap_take(NodeHeap* heap)
+Node* heap_take(NodeArray* heap)
 {
     if (heap->len == 0) return NULL;
 
@@ -123,7 +126,8 @@ Node* heap_take(Heap* heap)
     return first;
 }
 
-int heap_height(Heap* heap)
+// int heap_height(NodeHeap* heap)
+int heap_height(NodeArray* heap)
 {
     if (heap->len == 0) return 0;
 
@@ -131,7 +135,8 @@ int heap_height(Heap* heap)
     return (int) (log((double) heap->len) / log(2.0)) + 1;
 }
 
-void heap_show(Heap* heap)
+// void heap_show(NodeHeap* heap)
+void heap_show(NodeArray* heap)
 {
     int height = heap_height(heap);
 
@@ -161,7 +166,7 @@ void heap_show(Heap* heap)
 
 // int main(void)
 // {
-//     Heap* test_heap = heap_init(NULL, 20);
+//     NodeHeap* test_heap = narr_init(NULL, 20);
 
 //     srand((unsigned) time(NULL));
 
@@ -173,7 +178,7 @@ void heap_show(Heap* heap)
 //     }
 //     heap_show(test_heap);
 
-//     heap_obliterate(test_heap);
+//     narr_obliterate(test_heap);
 
 //     return 0;
 // }

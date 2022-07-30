@@ -14,8 +14,10 @@ AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_
     ass->start = init_start;
     ass->dest = init_dest;
 
-    ass->open = heap_init(NULL, 10);
-    heap_add(ass->open, ass->start);
+    ass->open_heap = narr_init(NULL, 10);
+    heap_add(ass->open_heap, ass->start);
+
+    ass->closed_narr = narr_init(NULL, 10);
 
     return ass;
 }
@@ -26,11 +28,10 @@ void ass_reset(AStar* ass)
     *ass = *new_ass;
 }
 
-// needs array of min length 9; index 4 will always be empty
-// returns number of neighbours found
-int get_neighbours(AStar* ass, Node* node, Node* nbs_arr[])
+// returns number of neighbours found 
+int get_neighbours(AStar* ass, Node* node)
 {
-    int n = 0;
+    NodeArray* nbs_narr = narr_init(NULL, 9);
 
     for (int i = 0; i < 9; i++)
     {
@@ -49,7 +50,7 @@ int get_neighbours(AStar* ass, Node* node, Node* nbs_arr[])
 
         if (!current_node->walkable) continue;
 
-        if (node_in_arr(current_node, ass->closed, ass->closed_len)) continue;
+        if (narr_contains(ass->closed_narr, current_node)) continue;
 
         // check the two direct adjacent nodes so you dont cut corners
         if (x != node->x && y != node->y)
@@ -60,11 +61,41 @@ int get_neighbours(AStar* ass, Node* node, Node* nbs_arr[])
             if (!(adj_1->walkable && adj_2->walkable)) continue;
         }
 
-        nbs_arr[i] = current_node;
-        n++;
+        narr_add(nbs_narr, current_node);
     }
 
-    return n;
+    return nbs_narr;
 }
 
-//TODO: actual pathfinding shit
+void ass_step(AStar* ass)
+{
+    ass->stepcount++;
+
+    Node* node = heap_take(ass->open_heap);
+
+    narr_add(ass->closed_narr, node);
+
+    if (node = ass->dest)
+    {
+        ass->found = 1;
+        return;
+    }
+
+    nbs_narr = get_neighbours(ass, node);
+
+    for (int i = 0; i < nbs_narr->len; i++)
+    {
+        current_nb = nbs_narr->elements[i];
+        old_F = current_nb->F;
+
+        node_cal_F(current_nb, node, ass->dest);
+
+        if (current_nb->F != old_F)
+            heap_sortdown(ass->open_heap);
+        
+        if (!narr_contains(ass->open_heap, current_nb))
+            heap_add(ass->open_heap, current_nb);
+    }
+
+    // TODO find direct path stuff
+}

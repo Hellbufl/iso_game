@@ -1,6 +1,6 @@
 #include "util.h"
-#include "node.h"
-#include "minheap.h"
+// #include "node.h"
+// #include "minheap.h"
 
 // utility functions //
 
@@ -40,21 +40,4 @@ float float_abs(float x)
 int dsign(float x)
 {
     return -((*((int*) &x) & 0x80000000) / 0x40000000) + 1;
-}
-
-void swap(Node* e1, Node* e2)
-{
-    Node tmp = *e1;
-    *e1 = *e2;
-    *e2 = tmp;
-}
-
-int less_expensive(NodeArray* heap, int i, int k)
-{
-    if (i >= heap->len) return 0;
-    if (k >= heap->len) return 1;
-    if (heap->elements[i]->F > heap->elements[k]->F) return 0;
-    if (heap->elements[i]->F < heap->elements[k]->F) return 1;
-    if (heap->elements[i]->H > heap->elements[k]->H) return 1;
-    return 0;
 }

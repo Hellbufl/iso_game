@@ -1,5 +1,5 @@
 #include "node.h"
-#include "util.h"
+// #include "util.h"
 
 // Node Functions //
 
@@ -57,6 +57,13 @@ void node_cal_F(Node* node, Node* parent, Node* dest)
 
     node->H = node_cal_H(dest);
     node->F = node->G + node->H;
+}
+
+void node_swap(Node* e1, Node* e2)
+{
+    Node tmp = *e1;
+    *e1 = *e2;
+    *e2 = tmp;
 }
 
 // NodeArray functions //
@@ -168,4 +175,23 @@ void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
         i++;
         k++;
     }
+}
+
+void narr_join(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
+{
+    NodeArray* new_narr = narr_init(NULL, narr_1->cap + narr_2->cap);
+
+    while (i < 0) i += narr_1->len;
+    while (k < 0) k += narr_2->len;
+
+    int new_len_1 = i % narr_1->len;
+    int new_len_2 = narr_2->len - k % narr_2->len;
+
+    for (i = 0; i < new_len_1; i++)
+        new_narr->elements[i] = narr_1->elements[i];
+
+    for (i = 0; i < new_len_2; i++)
+        new_narr->elements[new_len_1 + i] = narr_2->elements[k + i];
+    
+    return new_narr;
 }

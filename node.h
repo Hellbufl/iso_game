@@ -1,7 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "util.h"
 
-typedef struct Node
+typedef struct node
 {
     int x;
     int y;
@@ -12,13 +13,13 @@ typedef struct Node
 
     int walkable;
     
-    struct Node* parent;
+    struct node* parent;
 
 } Node;
 
-typedef struct NodeArray
+typedef struct nodeArray
 {
-    struct Node** elements;
+    struct node** elements;
     int len;
     int cap;
 
@@ -28,6 +29,7 @@ Node* node_init(Node* init_node);
 int node_cal_G(Node* node, Node* parent);
 int node_cal_H(Node* node, Node* dest);
 void node_cal_F(Node* node, Node* parent, Node* dest);
+void node_swap(Node* e1, Node* e2);
 
 NodeArray* narr_init(Node** init_arr, int len_or_cap);
 void narr_expand(NodeArray* narr);

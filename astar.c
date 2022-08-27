@@ -1,7 +1,7 @@
 #include "astar.h"
-#include "node.h"
-#include "minheap.h"
-#include "util.h"
+// #include "node.h"
+// #include "minheap.h"
+// #include "util.h"
 
 // not for resetting
 AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_start, Node* init_dest)
@@ -24,12 +24,13 @@ AStar* ass_init(Node*** init_field, int init_width, int init_height, Node* init_
 
 void ass_reset(AStar* ass)
 {
-    new_ass = ass_init(ass->field, ass->f_width, ass->f_height, ass->start, ass->dest);
+    AStar* new_ass = ass_init(ass->field, ass->f_width, ass->f_height, ass->start, ass->dest);
     *ass = *new_ass;
+    free(new_ass);
 }
 
 // returns number of neighbours found 
-int get_neighbours(AStar* ass, Node* node)
+NodeArray* get_neighbours(AStar* ass, Node* node)
 {
     NodeArray* nbs_narr = narr_init(NULL, 9);
 
@@ -72,16 +73,18 @@ void ass_step(AStar* ass)
     ass->stepcount++;
 
     Node* node = heap_take(ass->open_heap);
+    Node* current_nb;
+    int old_F;
 
     narr_add(ass->closed_narr, node);
 
-    if (node = ass->dest)
+    if (node == ass->dest)
     {
         ass->found = 1;
         return;
     }
 
-    nbs_narr = get_neighbours(ass, node);
+    NodeArray* nbs_narr = get_neighbours(ass, node);
 
     for (int i = 0; i < nbs_narr->len; i++)
     {
@@ -135,7 +138,7 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
     {
         path = ass_find_direct_path(ass, path, mid, last);
 
-        if (ass_raycast(local_A, path->elements[1]))
+        if (ass_raycast(ass, local_A, path->elements[1]))
             narr_append(direct_path, -1, path, 1);
         else
             narr_append(direct_path, 2, path, 1);
@@ -148,7 +151,7 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
     {
         path = ass_find_direct_path(ass, path, first, mid);
 
-        if (ass_raycast(local_B, path->elements[path->len - 2]))
+        if (ass_raycast(ass, local_B, path->elements[path->len - 2]))
             narr_append(path, -1, direct_path, 1);
         else
             narr_append(path, path->len, direct_path, 1);
@@ -157,8 +160,8 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
         return direct_path;
     }
 
-    NodeArray* path_1 = ass_find_direct_path(path, first, mid);
-    NodeArray* path_2 = ass_find_direct_path(path, mid, last);
+    NodeArray* path_1 = ass_find_direct_path(ass, path, first, mid);
+    NodeArray* path_2 = ass_find_direct_path(ass, path, mid, last);
 
     if (ass_raycast(ass, path_1->elements[path_1->len - 2], path_2->elements[1]))
         path = narr_append(path_1, -1, path_2, 1);

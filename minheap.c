@@ -1,5 +1,5 @@
 #include "minheap.h"
-#include "util.h"
+// #include "util.h"
 
 // heap functions //
 
@@ -133,6 +133,16 @@ int heap_height(NodeArray* heap)
 
     // log2(x) = logy(x) / logy(2)
     return (int) (log((double) heap->len) / log(2.0)) + 1;
+}
+
+int less_expensive(NodeArray* heap, int i, int k)
+{
+    if (i >= heap->len) return 0;
+    if (k >= heap->len) return 1;
+    if (heap->elements[i]->F > heap->elements[k]->F) return 0;
+    if (heap->elements[i]->F < heap->elements[k]->F) return 1;
+    if (heap->elements[i]->H > heap->elements[k]->H) return 1;
+    return 0;
 }
 
 // void heap_show(NodeHeap* heap)

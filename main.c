@@ -1,10 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include "vecmath.h"
-
-#define SCREEN_WIDTH 600
-#define SCREEN_HEIGHT 400
+#include "graphics.h"
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +21,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1,
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1,
                                                 SDL_RENDERER_ACCELERATED |
                                                 SDL_RENDERER_PRESENTVSYNC);
     if (renderer == NULL)
@@ -34,6 +30,11 @@ int main(int argc, char *argv[])
         fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
         return EXIT_FAILURE;
     }
+    int fsize[] = { 16, 9 };
+    int screen_size[] = { SCREEN_WIDTH, SCREEN_HEIGHT };
+
+    GameState* gstinky = gstate_init(fsize, screen_size);
+    int click_pos[2];
 
     int state = 0;
 
@@ -49,17 +50,32 @@ int main(int argc, char *argv[])
             case SDL_QUIT:
                 state = 1;
                 break;
+            
+            case SDL_MOUSEBUTTONDOWN:
+                SDL_GetMouseState(&click_pos[0], &click_pos[1]);
+                gstate_click(gstinky, click_pos);
+                break;
+            
+            case SDL_KEYDOWN:
+                gstate_keypress(gstinky, event.key);
+                break;
 
             default: {}
             }
         }
 
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
+        gstate_update(gstinky);
+        draw_field(renderer, gstinky);
+
         SDL_RenderPresent(renderer);
+
+        // SDL_Delay(200.0f);
     }
 
+    gstate_destroy(gstinky);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
     SDL_Quit();
 
     return EXIT_SUCCESS;

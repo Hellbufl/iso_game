@@ -1,50 +1,6 @@
 #include "minheap.h"
-// #include "util.h"
 
 // heap functions //
-
-// // n is heap capacity when no init array (NULL) is given
-// NodeHeap* heap_init(Node** init_arr, int n)
-// {
-//     NodeHeap* heap = (NodeHeap*) calloc(1, sizeof(NodeHeap));
-
-//     // no init array -> empty heap with n as capacity
-//     if (init_narr == NULL)
-//     {
-//         heap->elements = (Node**) calloc(caplen, sizeof(Node*));
-//         heap->len = 0;
-//         heap->cap = n;
-
-//         return heap;
-//     }
-
-//     // copy init array to new heap with 2x capacity
-
-//     heap->elements = (Node**) calloc(2 * n, sizeof(Node*));
-//     heap->len = n;
-//     heap->cap = 2 * n;
-
-//     for (int i = 0; i < n; i++)
-//         heap->elements[i] = init_arr[i];
-
-//     return heap;
-// }
-
-// // does not free the nodes
-// void heap_destroy(NodeHeap* heap)
-// {
-//     free(heap->elements);
-//     free(heap);
-// }
-
-// // does free the nodes
-// void heap_obliterate(NodeHeap* heap)
-// {
-//     for (int i = 0; i < heap->len; i++)
-//         free(heap->elements[i]);
-
-//     heap_destroy(heap);
-// }
 
 // void heap_sortup(NodeHeap* heap, int i)
 void heap_sortup(NodeArray* heap, int i)
@@ -54,14 +10,9 @@ void heap_sortup(NodeArray* heap, int i)
     // parent index
     int ip = (i - 1) / 2;
 
-    if (heap->elements[i]->F >= heap->elements[ip]->F)
-    {
-        if (heap->elements[i]->F > heap->elements[ip]->F) return;
+    if (!less_expensive(heap, i, ip)) return;
 
-        if (heap->elements[i]->H > heap->elements[ip]->H) return;
-    }
-
-    swap(heap->elements[i], heap->elements[ip]);
+    node_swap(&heap->elements[i], &heap->elements[ip]);
     heap_sortup(heap, ip);
 }
 
@@ -69,11 +20,11 @@ void heap_sortup(NodeArray* heap, int i)
 void heap_sortdown(NodeArray* heap)
 {
     int height = heap_height(heap);
-    int n = heap->len - ipow(2, height - 1) + 1;
+    int n = heap->len - int_pow(2, height - 1) + 1;
 
     for (int e = height - 1; e > 0; e--)
     {
-        int start = ipow(2, e) - 1;
+        int start = int_pow(2, e) - 1;
         
         for (int k = start; k < start + n; k++)
         {
@@ -85,16 +36,16 @@ void heap_sortdown(NodeArray* heap)
             if (less_expensive(heap, k, ir))
             {
                 if (less_expensive(heap, k, ip))
-                    swap(heap->elements[k], heap->elements[ip]);
+                    node_swap(&heap->elements[k], &heap->elements[ip]);
                 
                 continue;
             }
 
             if (less_expensive(heap, ir, ip))
-                swap(heap->elements[ir], heap->elements[ip]);
+                node_swap(&heap->elements[ir], &heap->elements[ip]);
         }
 
-        n = ipow(2, e - 1);
+        n = int_pow(2, e - 1);
     }
 }
 
@@ -102,7 +53,7 @@ void heap_sortdown(NodeArray* heap)
 void heap_add(NodeArray* heap, Node* node)
 {
     if (heap->len == heap->cap)
-        narr_expand(heap);
+        narr_expand(heap, -1);
 
     heap->elements[heap->len] = node;
     heap->len += 1;
@@ -141,8 +92,8 @@ int less_expensive(NodeArray* heap, int i, int k)
     if (k >= heap->len) return 1;
     if (heap->elements[i]->F > heap->elements[k]->F) return 0;
     if (heap->elements[i]->F < heap->elements[k]->F) return 1;
-    if (heap->elements[i]->H > heap->elements[k]->H) return 1;
-    return 0;
+    if (heap->elements[i]->H > heap->elements[k]->H) return 0;
+    return 1;
 }
 
 // void heap_show(NodeHeap* heap)
@@ -152,12 +103,12 @@ void heap_show(NodeArray* heap)
 
     for (int layer = 0; layer < height; layer++)
     {
-        int max_n = ipow(2, layer);
-        int spacing = ipow(2, height - layer);
+        int max_n = int_pow(2, layer);
+        int spacing = int_pow(2, height - layer);
 
         for (int i = 0; i < max_n; i++)
         {
-            int arr_i = i + ipow(2, layer) - 1;
+            int arr_i = i + int_pow(2, layer) - 1;
             
             if (arr_i >= heap->len) continue;
 
@@ -170,25 +121,3 @@ void heap_show(NodeArray* heap)
         printf("\n");
     }
 }
-
-// TESTING //
-// #include <time.h>
-
-// int main(void)
-// {
-//     NodeHeap* test_heap = narr_init(NULL, 20);
-
-//     srand((unsigned) time(NULL));
-
-//     for (int i = 0; i < 10; i++)
-//     {
-//         Node* test_node = (Node*) calloc(1, sizeof(Node));
-//         test_node->F = rand() % 500;
-//         heap_add(test_heap, test_node);
-//     }
-//     heap_show(test_heap);
-
-//     narr_obliterate(test_heap);
-
-//     return 0;
-// }

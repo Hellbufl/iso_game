@@ -2,25 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "util.h"
-
-// typedef struct NodeHeap
-// {
-//     struct Node** elements;
-//     int len;
-//     int cap;
-    
-// } NodeHeap;
-
-// NodeHeap* heap_init(Node** init_arr, int n)
-// void heap_destroy(NodeHeap* heap);
-// void heap_obliterate(NodeHeap* heap);
-
-// void heap_sortup(NodeHeap* heap, int i);
-// void heap_sortdown(NodeHeap* heap);
-// void heap_add(NodeHeap* heap, Node* node);
-// Node* heap_take(NodeHeap* heap);
-// int heap_height(NodeHeap* heap);
-// void heap_show(NodeHeap* heap);
+#include "node.h"
 
 void heap_sortup(NodeArray* heap, int i);
 void heap_sortdown(NodeArray* heap);

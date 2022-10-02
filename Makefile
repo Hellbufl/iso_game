@@ -7,10 +7,10 @@ CC := clang
 CFLAGS := `sdl2-config --libs --cflags` -ggdb3 -O0 --std=c11 -Wall -lm -lSDL2_image
 
 # add header files here
-HDRS := astar.h node.h minheap.h util.h vecmath.h
+HDRS := graphics.h game.h astar.h node.h minheap.h util.h vecmath.h
 
 # add source files here
-SRCS := main.c astar.c node.c minheap.c util.c vecmath.c
+SRCS := main.c graphics.c game.c astar.c node.c minheap.c util.c vecmath.c
 
 # generate names of object files
 OBJS := $(SRCS:.c=.o)

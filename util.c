@@ -1,6 +1,4 @@
 #include "util.h"
-// #include "node.h"
-// #include "minheap.h"
 
 // utility functions //
 
@@ -16,12 +14,12 @@ float fast_isqrt(float x)
     i = 0x5f3759df - (i >> 1);
     y = * (float*) &i;
     y = y * (threehalfs - (x2 * y * y));
-    // y = y * (threehalfs - (x2 * y * y)); //2nd iteration
+    y = y * (threehalfs - (x2 * y * y)); //2nd iteration
     
     return y;
 }
 
-int ipow(int b, int e)
+int int_pow(int b, int e)
 {
     int result = 1;
 
@@ -37,7 +35,7 @@ float float_abs(float x)
     return *((float*) &ix);
 }
 
-int dsign(float x)
+int float_sign(float x)
 {
     return -((*((int*) &x) & 0x80000000) / 0x40000000) + 1;
 }

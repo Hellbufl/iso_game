@@ -1,52 +1,52 @@
 #include "astar.h"
 
 // not for resetting
-AStar* ass_init(Node*** init_field, int init_width, int init_height)
+AStar* astar_init(Node*** init_field, int init_width, int init_height)
 {
-    AStar* ass = (AStar*) calloc(1, sizeof(AStar));
+    AStar* astar = (AStar*) calloc(1, sizeof(AStar));
 
-    ass->field = init_field;
-    ass->f_width = init_width;
-    ass->f_height = init_height;
+    astar->field = init_field;
+    astar->f_width = init_width;
+    astar->f_height = init_height;
 
-    ass->open_heap = narr_init(10);
-    ass->closed_narr = narr_init(10);
+    astar->open_heap = narr_init(10);
+    astar->closed_narr = narr_init(10);
 
-    return ass;
+    return astar;
 }
 
-void ass_reset(AStar* ass)
+void astar_reset(AStar* astar)
 {
-    if (ass == NULL) return;
+    if (astar == NULL) return;
 
-    ass->found = 0;
-    ass->stepcount = 0;
+    astar->found = 0;
+    astar->stepcount = 0;
 
-    narr_clear(ass->open_heap);
-    narr_clear(ass->closed_narr);
+    narr_clear(astar->open_heap);
+    narr_clear(astar->closed_narr);
 
-    heap_add(ass->open_heap, ass->start);
+    heap_add(astar->open_heap, astar->start);
 
-    for (int ix = 0; ix < ass->f_width; ix++)
-        for (int iy = 0; iy < ass->f_height; iy++)
+    for (int ix = 0; ix < astar->f_width; ix++)
+        for (int iy = 0; iy < astar->f_height; iy++)
 
-            node_reset(ass->field[ix][iy]);
+            node_reset(astar->field[ix][iy]);
 }
 
-void ass_destroy(AStar* ass)
+void astar_destroy(AStar* astar)
 {
-    if (ass == NULL) return;
-    narr_destroy(ass->open_heap);
-    narr_destroy(ass->closed_narr);
-    free(ass);
+    if (astar == NULL) return;
+    narr_destroy(astar->open_heap);
+    narr_destroy(astar->closed_narr);
+    free(astar);
 }
 
 // returns number of neighbours found 
-NodeArray* get_neighbours(AStar* ass, Node* node, NodeArray* nbs_narr)
+NodeArray* get_neighbours(AStar* astar, Node* node, NodeArray* nbs_narr)
 {
-    if (ass == NULL)
+    if (astar == NULL)
     {
-        perror("get_neighbours(): AStar* ass == NULL");
+        perror("get_neighbours(): AStar* astar == NULL");
         exit(1);
     }
     if (node == NULL)
@@ -65,20 +65,20 @@ NodeArray* get_neighbours(AStar* ass, Node* node, NodeArray* nbs_narr)
         if (x < 0) continue;
         if (y < 0) continue;
 
-        if (x >= ass->f_width) continue;
-        if (y >= ass->f_height) continue;
+        if (x >= astar->f_width) continue;
+        if (y >= astar->f_height) continue;
 
-        Node* current_node = ass->field[x][y];
+        Node* current_node = astar->field[x][y];
 
         if (!current_node->walkable) continue;
 
-        if (narr_contains(ass->closed_narr, current_node)) continue;
+        if (narr_contains(astar->closed_narr, current_node)) continue;
 
         // check the two direct adjacent nodes so you dont cut corners
         if (x != node->x && y != node->y)
         {
-            Node* adj_1 = ass->field[node->x][y];
-            Node* adj_2 = ass->field[x][node->y];
+            Node* adj_1 = astar->field[node->x][y];
+            Node* adj_2 = astar->field[x][node->y];
 
             if (!(adj_1->walkable && adj_2->walkable)) continue;
         }
@@ -89,59 +89,59 @@ NodeArray* get_neighbours(AStar* ass, Node* node, NodeArray* nbs_narr)
     return nbs_narr;
 }
 
-void ass_step(AStar* ass)
+void astar_step(AStar* astar)
 {
-    if (ass == NULL) return;
+    if (astar == NULL) return;
 
-    ass->stepcount++;
+    astar->stepcount++;
 
-    Node* node = heap_take(ass->open_heap);
+    Node* node = heap_take(astar->open_heap);
     Node* current_nb;
     int old_F;
 
-    narr_add(ass->closed_narr, node);
+    narr_add(astar->closed_narr, node);
 
-    if (node == ass->dest)
+    if (node == astar->dest)
     {
-        ass->found = 1;
+        astar->found = 1;
         return;
     }
 
     NodeArray* nbs_narr = narr_init(9);
-    get_neighbours(ass, node, nbs_narr);
+    get_neighbours(astar, node, nbs_narr);
 
     for (int i = 0; i < nbs_narr->len; i++)
     {
         current_nb = nbs_narr->elements[i];
         old_F = current_nb->F;
 
-        node_cal_F(current_nb, node, ass->dest);
+        node_cal_F(current_nb, node, astar->dest);
 
         if (current_nb->F != old_F)
-            heap_sortdown(ass->open_heap);
+            heap_sortdown(astar->open_heap);
         
-        if (!narr_contains(ass->open_heap, current_nb))
-            heap_add(ass->open_heap, current_nb);
+        if (!narr_contains(astar->open_heap, current_nb))
+            heap_add(astar->open_heap, current_nb);
     }
     narr_destroy(nbs_narr);
 }
 
-void ass_backtrack(AStar* ass, NodeArray* path)
+void astar_backtrack(AStar* astar, NodeArray* path)
 {
-    for (Node* np = ass->dest; np != ass->start; np = np->parent)
+    for (Node* np = astar->dest; np != astar->start; np = np->parent)
         narr_add(path, np);
 }
 
-NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last)
+NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int last)
 {
-    if (ass == NULL)
+    if (astar == NULL)
     {
-        perror("ass_find_direct_path(): AStar* ass == NULL");
+        perror("astar_find_direct_path(): AStar* astar == NULL");
         exit(1);
     }
     if (path == NULL)
     {
-        perror("ass_find_direct_path(): NodeArray* path == NULL");
+        perror("astar_find_direct_path(): NodeArray* path == NULL");
         exit(1);
     }
 
@@ -165,8 +165,8 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
         return direct_path;
     }
 
-    int path1_free = ass_raycast(ass, local_M, local_A);
-    int path2_free = ass_raycast(ass, local_M, local_B);
+    int path1_free = astar_raycast(astar, local_M, local_A);
+    int path2_free = astar_raycast(astar, local_M, local_B);
 
     if (path1_free && path2_free)
     {
@@ -178,9 +178,9 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
 
     if (path1_free)
     {
-        path = ass_find_direct_path(ass, path, mid, last);
+        path = astar_find_direct_path(astar, path, mid, last);
 
-        if (ass_raycast(ass, local_A, path->elements[1]))
+        if (astar_raycast(astar, local_A, path->elements[1]))
             narr_append(direct_path, -1, path, 1);
         else
             narr_append(direct_path, 2, path, 1);
@@ -191,9 +191,9 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
 
     if (path2_free)
     {
-        path = ass_find_direct_path(ass, path, first, mid);
+        path = astar_find_direct_path(astar, path, first, mid);
 
-        if (ass_raycast(ass, local_B, path->elements[path->len - 2]))
+        if (astar_raycast(astar, local_B, path->elements[path->len - 2]))
             narr_append(path, -1, direct_path, 1);
         else
             narr_append(path, path->len, direct_path, 1);
@@ -202,10 +202,10 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
         return direct_path;
     }
 
-    NodeArray* path_1 = ass_find_direct_path(ass, path, first, mid);
-    NodeArray* path_2 = ass_find_direct_path(ass, path, mid, last);
+    NodeArray* path_1 = astar_find_direct_path(astar, path, first, mid);
+    NodeArray* path_2 = astar_find_direct_path(astar, path, mid, last);
 
-    if (ass_raycast(ass, path_1->elements[path_1->len - 2], path_2->elements[1]))
+    if (astar_raycast(astar, path_1->elements[path_1->len - 2], path_2->elements[1]))
         narr_append(path_1, -1, path_2, 1);
     else
         narr_append(path_1, path_1->len, path_2, 1);
@@ -215,21 +215,21 @@ NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last
     return path;
 }
 
-int ass_raycast(AStar* ass, Node* start, Node* end)
+int astar_raycast(AStar* astar, Node* start, Node* end)
 {
-    if (ass == NULL)
+    if (astar == NULL)
     {
-        perror("ass_raycast(): AStar* ass == NULL");
+        perror("astar_raycast(): AStar* astar == NULL");
         exit(1);
     }
     if (start == NULL)
     {
-        perror("ass_raycast(): Node* start == NULL");
+        perror("astar_raycast(): Node* start == NULL");
         exit(1);
     }
     if (end == NULL)
     {
-        perror("ass_raycast(): Node* end == NULL");
+        perror("astar_raycast(): Node* end == NULL");
         exit(1);
     }
 
@@ -240,7 +240,7 @@ int ass_raycast(AStar* ass, Node* start, Node* end)
     if (start->x == end->x)
     {
         for (int i = 0; i < abs(start->y - end->y); i++)
-            if (!ass->field[start->x][start->y + step[1] * i]->walkable) return 0;
+            if (!astar->field[start->x][start->y + step[1] * i]->walkable) return 0;
         
         return 1;
     }
@@ -249,7 +249,7 @@ int ass_raycast(AStar* ass, Node* start, Node* end)
     if (start->y == end->y)
     {
         for (int i = 0; i < abs(start->x - end->x); i++)
-            if (!ass->field[start->x + step[0] * i][start->y]->walkable) return 0;
+            if (!astar->field[start->x + step[0] * i][start->y]->walkable) return 0;
         
         return 1;
     }
@@ -269,8 +269,8 @@ int ass_raycast(AStar* ass, Node* start, Node* end)
         float v_iid = fast_isqrt(v_isect[0] * v_isect[0] + v_isect[1] * v_isect[1]);
         float h_iid = fast_isqrt(h_isect[0] * h_isect[0] + h_isect[1] * h_isect[1]);
 
-        Node* node1 = ass->field[current_node->x + step[0]][current_node->y];
-        Node* node2 = ass->field[current_node->x][current_node->y + step[1]];
+        Node* node1 = astar->field[current_node->x + step[0]][current_node->y];
+        Node* node2 = astar->field[current_node->x][current_node->y + step[1]];
 
         if (v_iid > h_iid)
         {
@@ -289,7 +289,7 @@ int ass_raycast(AStar* ass, Node* start, Node* end)
             if (!node1->walkable) return 0;
             if (!node2->walkable) return 0;
 
-            current_node = ass->field[current_node->x + step[0]][current_node->y + step[1]];
+            current_node = astar->field[current_node->x + step[0]][current_node->y + step[1]];
             v_isect[0] += step[0];
             v_isect[1] += step[1] * tan;
             h_isect[0] += step[0] * cot;

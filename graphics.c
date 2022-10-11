@@ -1,9 +1,36 @@
 #include "graphics.h"
 
-// this is pretty crude rn so don't even read it
-// shit gets drawn
+void graph_init(SDL_Window** window, SDL_Renderer** renderer)
+{
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+    {
+        fprintf(stderr, "Could not initialize SDL2: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
 
-void draw_field(SDL_Renderer* renderer, GameState* gstate)
+    *window = SDL_CreateWindow(  "Drag-On Deez Nuts",
+                                100, 100,
+                                SCREEN_WIDTH, SCREEN_HEIGHT,
+                                SDL_WINDOW_SHOWN                );
+
+    if (window == NULL)
+    {
+        fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+
+    *renderer = SDL_CreateRenderer(  *window, -1,
+                                    SDL_RENDERER_ACCELERATED |
+                                    SDL_RENDERER_PRESENTVSYNC   );
+    if (renderer == NULL)
+    {
+        SDL_DestroyWindow(*window);
+        fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+}
+
+void graph_draw(SDL_Renderer* renderer, GameState* gstate)
 {
     SDL_Rect node_rect;
 
@@ -23,13 +50,13 @@ void draw_field(SDL_Renderer* renderer, GameState* gstate)
 
             // draw nodes in open heap and closed list
 
-            if (narr_contains(gstate->ass->open_heap, current_node))
+            if (narr_contains(gstate->astar->open_heap, current_node))
             {
                 SDL_SetRenderDrawColor(renderer, 120, 120, 169, 255);
                 SDL_RenderFillRect(renderer, &node_rect);
             }
 
-            if (narr_contains(gstate->ass->closed_narr, current_node))
+            if (narr_contains(gstate->astar->closed_narr, current_node))
             {
                 SDL_SetRenderDrawColor(renderer, 120, 169, 120, 255);
                 SDL_RenderFillRect(renderer, &node_rect);
@@ -37,13 +64,13 @@ void draw_field(SDL_Renderer* renderer, GameState* gstate)
 
             // draw start and destination
 
-            if (current_node == gstate->ass->start)
+            if (current_node == gstate->astar->start)
             {
                 SDL_SetRenderDrawColor(renderer, 120, 69, 255, 255);
                 SDL_RenderFillRect(renderer, &node_rect);
             }
 
-            if (current_node == gstate->ass->dest)
+            if (current_node == gstate->astar->dest)
             {
                 SDL_SetRenderDrawColor(renderer, 162, 255, 43, 255);
                 SDL_RenderFillRect(renderer, &node_rect);

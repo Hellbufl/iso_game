@@ -20,11 +20,11 @@ typedef struct AStar
 
 } AStar;
 
-AStar* ass_init(Node*** init_field, int init_width, int init_height);
-void ass_reset(AStar* ass);
-void ass_destroy(AStar* ass);
-NodeArray* get_neighbours(AStar* ass, Node* node, NodeArray* nbs_narr);
-void ass_step(AStar* ass);
-void ass_backtrack(AStar* ass, NodeArray* path);
-NodeArray* ass_find_direct_path(AStar* ass, NodeArray* path, int first, int last);
-int ass_raycast(AStar* ass, Node* start, Node* end);
+AStar* astar_init(Node*** init_field, int init_width, int init_height);
+void astar_reset(AStar* astar);
+void astar_destroy(AStar* astar);
+NodeArray* get_neighbours(AStar* astar, Node* node, NodeArray* nbs_narr);
+void astar_step(AStar* astar);
+void astar_backtrack(AStar* astar, NodeArray* path);
+NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int last);
+int astar_raycast(AStar* astar, Node* start, Node* end);

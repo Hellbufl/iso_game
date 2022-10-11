@@ -1,75 +1,61 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 #include "graphics.h"
+
+#define TICKRATE 30
 
 int main(int argc, char *argv[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        fprintf(stderr, "Could not initialize SDL2: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
+    SDL_Window* window = NULL;
+    SDL_Renderer* renderer = NULL;
 
-    SDL_Window *window = SDL_CreateWindow("Drag-On Deez Nuts",
-                                          100, 100,
-                                          SCREEN_WIDTH, SCREEN_HEIGHT,
-                                          SDL_WINDOW_SHOWN);
+    graph_init(&window, &renderer);
 
-    if (window == NULL)
-    {
-        fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1,
-                                                SDL_RENDERER_ACCELERATED |
-                                                SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == NULL)
-    {
-        SDL_DestroyWindow(window);
-        fprintf(stderr, "SDL_CreateRenderer Error: %s\n", SDL_GetError());
-        return EXIT_FAILURE;
-    }
     int fsize[] = { 16, 9 };
     int screen_size[] = { SCREEN_WIDTH, SCREEN_HEIGHT };
 
     GameState* gstinky = gstate_init(fsize, screen_size);
-    int click_pos[2];
 
-    int state = 0;
+    struct timespec last_tspec, now_tspec;
+    long delta_time, since_tick = 0; //nanoseconds
+    clock_gettime(CLOCK_REALTIME, &last_tspec);
+
+    // int fcount = 0;
+    // int fadd = 0;
+    // int famount = 100;
+
+    const int ticklen = 1e9 / TICKRATE;
 
     // main loop
-    while (state == 0)
+    while (gstinky->is_running)
     {
-        // check events
-        SDL_Event event;
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-                state = 1;
-                break;
-            
-            case SDL_MOUSEBUTTONDOWN:
-                SDL_GetMouseState(&click_pos[0], &click_pos[1]);
-                gstate_click(gstinky, click_pos);
-                break;
-            
-            case SDL_KEYDOWN:
-                gstate_keypress(gstinky, event.key);
-                break;
+        clock_gettime(CLOCK_REALTIME, &now_tspec);
+        delta_time = (now_tspec.tv_sec - last_tspec.tv_sec) * 1e9 + now_tspec.tv_nsec - last_tspec.tv_nsec;
 
-            default: {}
-            }
+        last_tspec.tv_sec = now_tspec.tv_sec;
+        last_tspec.tv_nsec = now_tspec.tv_nsec;
+
+        since_tick += delta_time;
+
+        while(since_tick > ticklen)
+        {
+            gstate_tick(gstinky);
+            since_tick -= ticklen;
         }
 
-        gstate_update(gstinky);
-        draw_field(renderer, gstinky);
+        graph_draw(renderer, gstinky);
 
         SDL_RenderPresent(renderer);
 
-        // SDL_Delay(200.0f);
+        // fcount++;
+        // fadd += delta_time;
+        // if (fcount == famount)
+        // {
+        //     printf("%d\n",(int) (famount * 1e9 / fadd));
+        //     fadd = 0;
+        //     fcount = 0;
+        // }
     }
 
     gstate_destroy(gstinky);

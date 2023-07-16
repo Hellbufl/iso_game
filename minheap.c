@@ -53,6 +53,7 @@ void heap_sortdown(NodeArray* heap)
 void heap_add(NodeArray* heap, Node* node)
 {
     if (heap->len == heap->cap)
+        // narr_balance(heap);
         narr_expand(heap, -1);
 
     heap->elements[heap->len] = node;
@@ -73,6 +74,8 @@ Node* heap_take(NodeArray* heap)
     
     heap->elements[heap->len - 1] = NULL;
     heap->len -= 1;
+
+    // narr_balance(heap);
 
     return first;
 }

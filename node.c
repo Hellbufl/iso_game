@@ -36,7 +36,7 @@ int node_cal_H(Node* node, Node* dest)
     if (delta_x == delta_y)
         return 14 * delta_x;
     
-    return 14 * MIN(delta_x, delta_y) + 10 * abs(delta_y - delta_x);
+    return 14 * MINOF(delta_x, delta_y) + 10 * abs(delta_y - delta_x);
 }
 
 void node_cal_F(Node* node, Node* parent, Node* dest)
@@ -82,12 +82,29 @@ NodeArray* narr_init(int capacity)
 void narr_expand(NodeArray* narr, int add_cap)
 {
     if (narr == NULL) return;
+    // if (add_cap <= 0) return;
 
     if (add_cap <= 0)
-        add_cap = narr->cap;
+        add_cap = narr->len;
 
     Node** new_elements = (Node**) calloc(narr->cap + add_cap, sizeof(Node*));
     narr->cap += add_cap;
+
+    for (int i = 0; i < narr->len; i++)
+        new_elements[i] = narr->elements[i];
+    
+    free(narr->elements);
+
+    narr->elements = new_elements;
+}
+
+void narr_balance(NodeArray* narr)
+{
+    if (narr == NULL) return;
+    if (narr->cap > narr->len && narr->cap < narr->len * MAX_CAPACITY_FACTOR) return;
+
+    Node** new_elements = (Node**) calloc(narr->len * TARGET_CAPACITY_FACTOR, sizeof(Node*));
+    narr->cap = narr->len * TARGET_CAPACITY_FACTOR;
 
     for (int i = 0; i < narr->len; i++)
         new_elements[i] = narr->elements[i];
@@ -139,7 +156,8 @@ void narr_set(NodeArray* narr, int i, Node* node)
 void narr_add(NodeArray* narr, Node* node)
 {
     if (narr->len == narr->cap)
-        narr_expand(narr, 0);
+        // narr_balance(narr);
+        narr_expand(narr, -1);
 
     narr->elements[narr->len] = node;
     narr->len += 1;
@@ -152,6 +170,8 @@ void narr_remove(NodeArray* narr, Node* node)
 
         if (narr->elements[i] == node)
             narr->elements[i] = NULL;
+    
+    // narr_balance(narr);
 }
 
 int narr_contains(NodeArray* narr, Node* node)
@@ -167,12 +187,16 @@ int narr_contains(NodeArray* narr, Node* node)
 
 void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
 {
+    if (i > narr_1->len) printf("[error] narr_append(): index i out of range\n");
+    if (k >= narr_2->len) printf("[error] narr_append(): index k out of range\n");
+
     while (i < 0) i += narr_1->len;
     while (k < 0) k += narr_2->len;
 
-    narr_expand(narr_1, narr_2->cap);
+    narr_expand(narr_1, narr_2->len);
+    narr_1->len = i + narr_2->len - k;
 
-    while (i < narr_1->len + narr_2->len)
+    while (i < narr_1->cap && k < narr_2->len)
     {
         narr_1->elements[i] = narr_2->elements[k];
         i++;
@@ -197,4 +221,31 @@ NodeArray* narr_join(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
         new_narr->elements[new_len_1 + i] = narr_2->elements[k + i];
     
     return new_narr;
+}
+
+void narr_reverse(NodeArray* narr)
+{
+    Node* tmp;
+    
+    for (int i = 0; i < narr->len >> 1; i++)
+    {
+        tmp = narr->elements[i];
+        narr->elements[i] = narr->elements[narr->len - i - 1];
+        narr->elements[narr->len - i - 1] = tmp;
+    }
+}
+
+void narr_print(NodeArray* narr)
+{
+    printf("[ ");
+
+    for (int i = 0; i < narr->len; i++)
+        printf("(%d, %d) ", narr->elements[i]->x, narr->elements[i]->y);
+
+    printf("]");
+
+    for (int i = narr->len; i < narr->cap; i++)
+        printf(" +");
+
+    printf("\n");
 }

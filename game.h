@@ -13,6 +13,7 @@ typedef struct GameState {
     AStar* astar;
 
     NodeArray* path;
+    NodeArray* direct_path;
 
 } GameState;
 

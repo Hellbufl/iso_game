@@ -130,6 +130,9 @@ void astar_backtrack(AStar* astar, NodeArray* path)
 {
     for (Node* np = astar->dest; np != astar->start; np = np->parent)
         narr_add(path, np);
+
+    narr_add(path, astar->start);
+    narr_reverse(path);
 }
 
 NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int last)
@@ -147,7 +150,7 @@ NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int 
 
     NodeArray* direct_path = narr_init(path->len);
 
-    if (last < 0) last = path->len - 1;
+    if (last < 0) last += path->len;
 
     Node* local_A = path->elements[first];
     Node* local_B = path->elements[last];
@@ -155,53 +158,52 @@ NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int 
     narr_add(direct_path, local_A);
     narr_add(direct_path, local_B);
 
-    int mid = (first + last) / 2;
+    int mid = (first + last) >> 1;
     Node* local_M = path->elements[mid];
 
-    if (first == mid)
-    {
-        narr_add(direct_path, local_A);
-        narr_add(direct_path, local_B);
-        return direct_path;
-    }
+    if (first == mid) return direct_path;
+    if (astar_raycast(astar, local_A, local_B)) return direct_path;
 
-    int path1_free = astar_raycast(astar, local_M, local_A);
+    int path1_free = astar_raycast(astar, local_A, local_M);
     int path2_free = astar_raycast(astar, local_M, local_B);
 
     if (path1_free && path2_free)
     {
+        narr_clear(direct_path);
         narr_add(direct_path, local_A);
         narr_add(direct_path, local_M);
         narr_add(direct_path, local_B);
+
         return direct_path;
     }
 
     if (path1_free)
     {
-        path = astar_find_direct_path(astar, path, mid, last);
+        NodeArray* path_2 = astar_find_direct_path(astar, path, mid, last);
 
-        if (astar_raycast(astar, local_A, path->elements[1]))
-            narr_append(direct_path, -1, path, 1);
+        if (astar_raycast(astar, local_A, path_2->elements[1]))
+            narr_append(direct_path, 1, path_2, 1);
         else
-            narr_append(direct_path, 2, path, 1);
+            narr_append(direct_path, 1, path_2, 0);
 
-        narr_destroy(path);
+        narr_destroy(path_2);
+
         return direct_path;
     }
 
     if (path2_free)
     {
-        path = astar_find_direct_path(astar, path, first, mid);
+        NodeArray* path_1 = astar_find_direct_path(astar, path, first, mid);
 
-        if (astar_raycast(astar, local_B, path->elements[path->len - 2]))
-            narr_append(path, -1, direct_path, 1);
+        if (astar_raycast(astar, path_1->elements[path_1->len - 2], local_B))
+            narr_append(path_1, -1, direct_path, 1);
         else
-            narr_append(path, path->len, direct_path, 1);
-
+            narr_append(path_1, path_1->len, direct_path, 1);
+        
         narr_destroy(direct_path);
-        return direct_path;
-    }
 
+        return path_1;
+    }
     NodeArray* path_1 = astar_find_direct_path(astar, path, first, mid);
     NodeArray* path_2 = astar_find_direct_path(astar, path, mid, last);
 
@@ -210,9 +212,10 @@ NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int 
     else
         narr_append(path_1, path_1->len, path_2, 1);
 
-    narr_destroy(path_1);
+    narr_destroy(direct_path);
     narr_destroy(path_2);
-    return path;
+
+    return path_1;
 }
 
 int astar_raycast(AStar* astar, Node* start, Node* end)
@@ -261,24 +264,28 @@ int astar_raycast(AStar* astar, Node* start, Node* end)
 
     // initial intersection points
     float v_isect[] = { 0.5f * (float) step[0], 0.5f * (float) step[1] * tan };
-    float h_isect[] = { 0.5f * (float) step[0], 0.5f * (float) step[1] * tan };
+    float h_isect[] = { 0.5f * (float) step[0] * cot, 0.5f * (float) step[1] };
 
     while (current_node != end)
     {
-        // inverse distance cause fast inverse sqare root is fast
-        float v_iid = fast_isqrt(v_isect[0] * v_isect[0] + v_isect[1] * v_isect[1]);
-        float h_iid = fast_isqrt(h_isect[0] * h_isect[0] + h_isect[1] * h_isect[1]);
+        narr_add(astar->closed_narr, current_node);
+
+        float v_dist = sqrtf(v_isect[0] * v_isect[0] + v_isect[1] * v_isect[1]);
+        float h_dist = sqrtf(h_isect[0] * h_isect[0] + h_isect[1] * h_isect[1]);
 
         Node* node1 = astar->field[current_node->x + step[0]][current_node->y];
         Node* node2 = astar->field[current_node->x][current_node->y + step[1]];
+        
+        // if (!node1->walkable) return 0;
+        // if (!node2->walkable) return 0;
 
-        if (v_iid > h_iid)
+        if (v_dist < h_dist)
         {
             current_node = node1;
             v_isect[0] += (float) step[0];
             v_isect[1] += (float) step[1] * tan;
         }
-        else if (v_iid < h_iid)
+        else if (v_dist > h_dist)
         {
             current_node = node2;
             h_isect[0] += (float) step[0] * cot;

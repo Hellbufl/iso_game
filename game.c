@@ -45,12 +45,14 @@ void gstate_update(GameState* gstate)
 
     astar_backtrack(gstate->astar, gstate->path);
     gstate->mode = 1;
-    
+
     if (gstate->path == NULL)
     {
         perror("gstate_update(): path == NULL");
         exit(1);
     }
+
+    gstate->direct_path = astar_find_direct_path(gstate->astar, gstate->path, 0, -1);
 }
 
 void gstate_input(GameState* gstate)
@@ -118,8 +120,15 @@ void gstate_click(GameState* gstate, int click_pos[])
     // clearing stuff
     if (gstate->path != NULL)
         if (gstate->path->len > 0) narr_clear(gstate->path);
+    if (gstate->direct_path != NULL)
+        if (gstate->path->len > 0) narr_clear(gstate->direct_path);
+
     if (gstate->astar->open_heap->len > 0) narr_clear(gstate->astar->open_heap);
     if (gstate->astar->closed_narr->len > 0) narr_clear(gstate->astar->closed_narr);
+    // narr_clear(gstate->path);
+    // narr_clear(gstate->direct_path);
+    // narr_clear(gstate->astar->open_heap);
+    // narr_clear(gstate->astar->closed_narr);
 
     int cell[2] = { click_pos[0] / gstate->cell_size[0],
                             click_pos[1] / gstate->cell_size[1] };
@@ -151,7 +160,10 @@ void gstate_click(GameState* gstate, int click_pos[])
 void gstate_keypress(GameState* gstate, SDL_KeyboardEvent event)
 {
     if (gstate->path != NULL && gstate->path->len > 0)
+    {
         narr_clear(gstate->path);
+        narr_clear(gstate->direct_path);
+    }
         
     switch (event.keysym.scancode)
     {

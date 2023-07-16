@@ -70,7 +70,7 @@ void graph_draw(SDL_Renderer* renderer, GameState* gstate)
                 SDL_RenderFillRect(renderer, &node_rect);
             }
 
-            if (current_node == gstate->astar->dest)
+            else if (current_node == gstate->astar->dest)
             {
                 SDL_SetRenderDrawColor(renderer, 162, 255, 43, 255);
                 SDL_RenderFillRect(renderer, &node_rect);
@@ -81,6 +81,12 @@ void graph_draw(SDL_Renderer* renderer, GameState* gstate)
             if (narr_contains(gstate->path, current_node))
             {
                 SDL_SetRenderDrawColor(renderer, 232, 169, 69, 255);
+                SDL_RenderFillRect(renderer, &node_rect);
+            }
+
+            if (narr_contains(gstate->direct_path, current_node))
+            {
+                SDL_SetRenderDrawColor(renderer, 232, 95, 42, 255);
                 SDL_RenderFillRect(renderer, &node_rect);
             }
 

@@ -103,8 +103,8 @@ void narr_balance(NodeArray* narr)
     if (narr == NULL) return;
     if (narr->cap > narr->len && narr->cap < narr->len * MAX_CAPACITY_FACTOR) return;
 
-    Node** new_elements = (Node**) calloc(narr->len * TARGET_CAPACITY_FACTOR, sizeof(Node*));
     narr->cap = narr->len * TARGET_CAPACITY_FACTOR;
+    Node** new_elements = (Node**) calloc(narr->cap, sizeof(Node*));
 
     for (int i = 0; i < narr->len; i++)
         new_elements[i] = narr->elements[i];
@@ -155,9 +155,8 @@ void narr_set(NodeArray* narr, int i, Node* node)
 
 void narr_add(NodeArray* narr, Node* node)
 {
-    if (narr->len == narr->cap)
-        // narr_balance(narr);
-        narr_expand(narr, -1);
+    if (narr->len >= narr->cap)
+        narr_balance(narr);
 
     narr->elements[narr->len] = node;
     narr->len += 1;
@@ -171,7 +170,7 @@ void narr_remove(NodeArray* narr, Node* node)
         if (narr->elements[i] == node)
             narr->elements[i] = NULL;
     
-    // narr_balance(narr);
+    narr_balance(narr);
 }
 
 int narr_contains(NodeArray* narr, Node* node)

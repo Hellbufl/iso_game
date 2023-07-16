@@ -2,23 +2,6 @@
 
 // utility functions //
 
-// float fast_isqrt(float x)
-// {
-//     int i;
-//     float x2, y;
-//     const float threehalfs = 1.5f;
-
-//     x2 = x * 0.5f;
-//     y = x;
-//     i = * (int*) &y;
-//     i = 0x5f3759df - (i >> 1);
-//     y = * (float*) &i;
-//     y = y * (threehalfs - (x2 * y * y));
-//     y = y * (threehalfs - (x2 * y * y)); //2nd iteration
-    
-//     return y;
-// }
-
 int int_pow(int basis, int exponent)
 {
     int result = 1;

@@ -2,7 +2,6 @@
 
 // heap functions //
 
-// void heap_sortup(NodeHeap* heap, int i)
 void heap_sortup(NodeArray* heap, int i)
 {
     if (i <= 0) return;
@@ -16,7 +15,6 @@ void heap_sortup(NodeArray* heap, int i)
     heap_sortup(heap, ip);
 }
 
-// void heap_sortdown(NodeHeap* heap)
 void heap_sortdown(NodeArray* heap)
 {
     int height = heap_height(heap);
@@ -49,7 +47,6 @@ void heap_sortdown(NodeArray* heap)
     }
 }
 
-// void heap_add(NodeHeap* heap, Node* node)
 void heap_add(NodeArray* heap, Node* node)
 {
     if (heap->len == heap->cap)
@@ -61,7 +58,6 @@ void heap_add(NodeArray* heap, Node* node)
     heap_sortup(heap, heap->len - 1);
 }
 
-// Node* heap_take(NodeHeap* heap)
 Node* heap_take(NodeArray* heap)
 {
     if (heap->len == 0) return NULL;
@@ -74,13 +70,11 @@ Node* heap_take(NodeArray* heap)
     heap->elements[heap->len - 1] = NULL;
     heap->len -= 1;
 
-    // TODO: figure out why this produces a segfault
-    // narr_balance(heap);
+    narr_balance(heap);
 
     return first;
 }
 
-// int heap_height(NodeHeap* heap)
 int heap_height(NodeArray* heap)
 {
     if (heap->len == 0) return 0;
@@ -99,7 +93,6 @@ int less_expensive(NodeArray* heap, int i, int k)
     return 1;
 }
 
-// void heap_show(NodeHeap* heap)
 void heap_show(NodeArray* heap)
 {
     int height = heap_height(heap);

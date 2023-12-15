@@ -101,6 +101,7 @@ void narr_expand(NodeArray* narr, int add_cap)
 void narr_balance(NodeArray* narr)
 {
     if (narr == NULL) return;
+    if (narr->len == 0) return;
     if (narr->cap > narr->len && narr->cap < narr->len * MAX_CAPACITY_FACTOR) return;
 
     narr->cap = narr->len * TARGET_CAPACITY_FACTOR;

@@ -24,6 +24,7 @@ void gstate_destroy(GameState* gstate)
     gstate_field_destroy(gstate);
     astar_destroy(gstate->astar);
     narr_destroy(gstate->path);
+    narr_destroy(gstate->direct_path);
     free(gstate);
 }
 
@@ -52,6 +53,7 @@ void gstate_update(GameState* gstate)
         exit(1);
     }
 
+    narr_destroy(gstate->direct_path);
     gstate->direct_path = astar_find_direct_path(gstate->astar, gstate->path, 0, -1);
 }
 

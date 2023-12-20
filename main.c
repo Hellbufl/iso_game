@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     const int ticklen = 1e9 / TICKRATE;
 
     // main loop
-    while (gstinky->is_running)
+    while (gstinky->isRunning)
     {
         clock_gettime(CLOCK_REALTIME, &now_tspec);
         delta_time = (now_tspec.tv_sec - last_tspec.tv_sec) * 1e9 + now_tspec.tv_nsec - last_tspec.tv_nsec;

@@ -5,81 +5,65 @@
 ////////////////////////
 
 // not for resetting
-AStar* astar_init(Node*** init_field, int init_width, int init_height)
+AStar* AStar_Init(Node*** initField, int initWidth, int initHeight)
 {
-    AStar* astar = (AStar*) calloc(1, sizeof(AStar));
+    AStar* aStar = (AStar*) calloc(1, sizeof(AStar));
 
-    astar->field = init_field;
-    astar->f_width = init_width;
-    astar->f_height = init_height;
+    aStar->field = initField;
+    aStar->fWidth = initWidth;
+    aStar->fHeight = initHeight;
 
-    astar->open_heap = narr_init(10);
-    astar->closed_narr = narr_init(10);
+    aStar->openHeap = NArr_Init(10);
+    aStar->closedNArr = NArr_Init(10);
 
-    return astar;
+    return aStar;
 }
 
-void astar_reset(AStar* astar)
+void AStar_Reset(AStar* aStar)
 {
-    if (astar == NULL) return;
+    if (aStar == NULL) return;
 
-    astar->found = 0;
-    astar->stepcount = 0;
+    aStar->found = 0;
+    aStar->stepcount = 0;
 
-    narr_clear(astar->open_heap);
-    narr_clear(astar->closed_narr);
+    NArr_Clear(aStar->openHeap);
+    NArr_Clear(aStar->closedNArr);
 
-    heap_add(astar->open_heap, astar->start);
+    Heap_Add(aStar->openHeap, aStar->start);
 
-    for (int ix = 0; ix < astar->f_width; ix++)
-        for (int iy = 0; iy < astar->f_height; iy++)
+    for (int ix = 0; ix < aStar->fWidth; ix++)
+        for (int iy = 0; iy < aStar->fHeight; iy++)
 
-            node_reset(astar->field[ix][iy]);
+            Node_Reset(aStar->field[ix][iy]);
 }
 
-void astar_destroy(AStar* astar)
+void AStar_Destroy(AStar* aStar)
 {
-    if (astar == NULL) return;
-    narr_destroy(astar->open_heap);
-    narr_destroy(astar->closed_narr);
-    free(astar);
+    if (aStar == NULL) return;
+    NArr_Destroy(aStar->openHeap);
+    NArr_Destroy(aStar->closedNArr);
+    free(aStar);
 }
 
-// void astar_search(AStar* astar, NodeArray* outPath, NodeArray* outDirectPath)
-// {
-    // TODO: get some fucking consistency in this project
+NodeArray* AStar_Search(AStar* aStar, NodeArray* outPath)
+{
+    if (outPath == NULL) { errno = EINVAL; return (NodeArray*) ERR_OUT_ARR; }
 
-    // if (!astar->found)
-    // {
-    //     astar_step(astar);
-    //     return;
-    // }
+    while (!aStar->found)
+    {
+        AStar_Step(aStar);
+    }
 
-    // astar_backtrack(astar, outPath);
-    // // gstate->mode = 1;
+    AStar_Backtrack(aStar, outPath);
 
-    // if (outPath == NULL)
-    // {
-    //     perror("astar_search(): path == NULL");
-    //     exit(1);
-    // }
-
-    // outDirectPath = astar_find_direct_path(astar, outPath, 0, -1);
-// }
+    return outPath;
+}
 
 // returns number of neighbours found 
-NodeArray* get_neighbours(AStar* astar, Node* node, NodeArray* nbs_narr)
+NodeArray* AStar_GetNeighbours(AStar* aStar, Node* node, NodeArray* out)
 {
-    if (astar == NULL)
-    {
-        perror("get_neighbours(): AStar* astar == NULL");
-        exit(1);
-    }
-    if (node == NULL)
-    {
-        perror("get_neighbours(): Node* node == NULL");
-        exit(1);
-    }
+    if (aStar == NULL)  { errno = EINVAL; return (NodeArray*) ERR_ASTAR; }
+    if (node == NULL)   { errno = EINVAL; return (NodeArray*) NULL; }
 
     for (int i = 0; i < 9; i++)
     {
@@ -91,176 +75,176 @@ NodeArray* get_neighbours(AStar* astar, Node* node, NodeArray* nbs_narr)
         if (x < 0) continue;
         if (y < 0) continue;
 
-        if (x >= astar->f_width) continue;
-        if (y >= astar->f_height) continue;
+        if (x >= aStar->fWidth) continue;
+        if (y >= aStar->fHeight) continue;
 
-        Node* current_node = astar->field[x][y];
+        Node* currentNode = aStar->field[x][y];
 
-        if (!current_node->walkable) continue;
+        if (!currentNode->walkable) continue;
 
-        if (narr_contains(astar->closed_narr, current_node)) continue;
+        if (NArr_Contains(aStar->closedNArr, currentNode)) continue;
 
         // check the two direct adjacent nodes so you dont cut corners
         if (x != node->x && y != node->y)
         {
-            Node* adj_1 = astar->field[node->x][y];
-            Node* adj_2 = astar->field[x][node->y];
+            Node* xAdjacent = aStar->field[node->x][y];
+            Node* yAdjacent = aStar->field[x][node->y];
 
-            if (!(adj_1->walkable && adj_2->walkable)) continue;
+            if (!(xAdjacent->walkable && yAdjacent->walkable)) continue;
         }
 
-        narr_add(nbs_narr, current_node);
+        NArr_Add(out, currentNode);
     }
 
-    return nbs_narr;
+    return out;
 }
 
-void astar_step(AStar* astar)
+void AStar_Step(AStar* aStar)
 {
-    if (astar == NULL) return;
+    if (aStar == NULL) return;
 
-    astar->stepcount++;
+    aStar->stepcount++;
 
-    Node* node = heap_take(astar->open_heap);
-    Node* current_nb;
+    Node* node = Heap_Take(aStar->openHeap);
+    Node* currentNeighbour;
     int old_F;
 
-    narr_add(astar->closed_narr, node);
+    NArr_Add(aStar->closedNArr, node);
 
-    if (node == astar->dest)
+    if (node == aStar->dest)
     {
-        astar->found = 1;
+        aStar->found = 1;
         return;
     }
 
-    NodeArray* nbs_narr = narr_init(9);
-    get_neighbours(astar, node, nbs_narr);
+    NodeArray* neighbours = NArr_Init(9);
+    AStar_GetNeighbours(aStar, node, neighbours);
 
-    for (int i = 0; i < nbs_narr->len; i++)
+    for (int i = 0; i < neighbours->len; i++)
     {
-        current_nb = nbs_narr->elements[i];
-        old_F = current_nb->F;
+        currentNeighbour = neighbours->elements[i];
+        old_F = currentNeighbour->F;
 
-        node_cal_F(current_nb, node, astar->dest);
+        Node_CalF(currentNeighbour, node, aStar->dest);
 
-        if (current_nb->F != old_F)
-            heap_sortdown(astar->open_heap);
+        if (currentNeighbour->F != old_F)
+            Heap_SortDown(aStar->openHeap);
         
-        if (!narr_contains(astar->open_heap, current_nb))
-            heap_add(astar->open_heap, current_nb);
+        if (!NArr_Contains(aStar->openHeap, currentNeighbour))
+            Heap_Add(aStar->openHeap, currentNeighbour);
     }
-    narr_destroy(nbs_narr);
+    NArr_Destroy(neighbours);
 }
 
-void astar_backtrack(AStar* astar, NodeArray* path)
+void AStar_Backtrack(AStar* aStar, NodeArray* path)
 {
-    for (Node* np = astar->dest; np != astar->start; np = np->parent)
-        narr_add(path, np);
+    for (Node* np = aStar->dest; np != aStar->start; np = np->parent)
+        NArr_Add(path, np);
 
-    narr_add(path, astar->start);
-    narr_reverse(path);
+    NArr_Add(path, aStar->start);
+    NArr_Reverse(path);
 }
 
-NodeArray* astar_find_direct_path(AStar* astar, NodeArray* path, int first, int last)
+NodeArray* AStar_FindDirectPath(AStar* aStar, NodeArray* path, NodeArray* outDirectPath)
 {
-    if (astar == NULL)
-    {
-        perror("astar_find_direct_path(): AStar* astar == NULL");
-        exit(1);
-    }
-    if (path == NULL)
-    {
-        perror("astar_find_direct_path(): NodeArray* path == NULL");
-        exit(1);
-    }
+    return AStar_FindDirectPathAt(aStar, path, 0, -1, outDirectPath);
+}
 
-    NodeArray* direct_path = narr_init(path->len);
+NodeArray* AStar_FindDirectPathAt(AStar* aStar, NodeArray* path, int first, int last, NodeArray* outDirectPath)
+{
+    if (aStar == NULL)                              { errno = EINVAL; return (NodeArray*) ERR_ASTAR; }
+    if (path == NULL)                               { errno = EINVAL; return (NodeArray*) ERR_IN_ARR; }
+    if (outDirectPath == NULL)                      { errno = EINVAL; return (NodeArray*) ERR_OUT_ARR; }
+    if (first >= path->len || last >= path->len)    { errno = EINVAL; return (NodeArray*) ERR_INDEX; }
 
-    if (last < 0) last += path->len;
+    while (first < 0) first += path->len;
+    while (last < 0) last += path->len;
 
     Node* local_A = path->elements[first];
     Node* local_B = path->elements[last];
 
-    narr_add(direct_path, local_A);
-    narr_add(direct_path, local_B);
+    NArr_Add(outDirectPath, local_A);
+    NArr_Add(outDirectPath, local_B);
 
     int mid = (first + last) >> 1;
     Node* local_M = path->elements[mid];
 
-    if (first == mid) return direct_path;
-    if (astar_raycast(astar, local_A, local_B)) return direct_path;
+    if (first == mid) return outDirectPath;
+    if (AStar_Raycast(aStar, local_A, local_B)) return outDirectPath;
 
-    int path1_free = astar_raycast(astar, local_A, local_M);
-    int path2_free = astar_raycast(astar, local_M, local_B);
+    int path1Free = AStar_Raycast(aStar, local_A, local_M);
+    int path2Free = AStar_Raycast(aStar, local_M, local_B);
 
-    if (path1_free && path2_free)
+    if (path1Free && path2Free)
     {
-        narr_clear(direct_path);
-        narr_add(direct_path, local_A);
-        narr_add(direct_path, local_M);
-        narr_add(direct_path, local_B);
+        NArr_Clear(outDirectPath);
+        NArr_Add(outDirectPath, local_A);
+        NArr_Add(outDirectPath, local_M);
+        NArr_Add(outDirectPath, local_B);
 
-        return direct_path;
+        return outDirectPath;
     }
 
-    if (path1_free)
+    if (path1Free)
     {
-        NodeArray* path_2 = astar_find_direct_path(astar, path, mid, last);
-
-        if (astar_raycast(astar, local_A, path_2->elements[1]))
-            narr_append(direct_path, 1, path_2, 1);
-        else
-            narr_append(direct_path, 1, path_2, 0);
-
-        narr_destroy(path_2);
-
-        return direct_path;
-    }
-
-    if (path2_free)
-    {
-        NodeArray* path_1 = astar_find_direct_path(astar, path, first, mid);
-
-        if (astar_raycast(astar, path_1->elements[path_1->len - 2], local_B))
-            narr_append(path_1, -1, direct_path, 1);
-        else
-            narr_append(path_1, path_1->len, direct_path, 1);
+        NodeArray* path2 = NArr_Init(path->len);
         
-        narr_destroy(direct_path);
+        AStar_FindDirectPathAt(aStar, path, mid, last, path2);
 
-        return path_1;
+        if (AStar_Raycast(aStar, local_A, path2->elements[1]))
+            NArr_Append(outDirectPath, 1, path2, 1);
+        else
+            NArr_Append(outDirectPath, 1, path2, 0);
+
+        NArr_Destroy(path2);
+
+        return outDirectPath;
     }
-    NodeArray* path_1 = astar_find_direct_path(astar, path, first, mid);
-    NodeArray* path_2 = astar_find_direct_path(astar, path, mid, last);
 
-    if (astar_raycast(astar, path_1->elements[path_1->len - 2], path_2->elements[1]))
-        narr_append(path_1, -1, path_2, 1);
+    if (path2Free)
+    {
+        NodeArray* path1 = NArr_Init(path->len);
+        
+        AStar_FindDirectPathAt(aStar, path, first, mid, path1);
+
+        if (AStar_Raycast(aStar, path1->elements[path1->len - 2], local_B))
+            NArr_Append(path1, -1, outDirectPath, 1);
+        else
+            NArr_Append(path1, path1->len, outDirectPath, 1);
+        
+        NArr_Clear(outDirectPath);
+        NArr_Append(outDirectPath, 0, path1, 0);
+
+        NArr_Destroy(path1);
+
+        return outDirectPath;
+    }
+
+    NodeArray* path1 = NArr_Init(path->len);
+    NodeArray* path2 = NArr_Init(path->len);
+
+    AStar_FindDirectPathAt(aStar, path, first, mid, path1);
+    AStar_FindDirectPathAt(aStar, path, mid, last, path2);
+
+    if (AStar_Raycast(aStar, path1->elements[path1->len - 2], path2->elements[1]))
+        NArr_Append(path1, -1, path2, 1);
     else
-        narr_append(path_1, path_1->len, path_2, 1);
+        NArr_Append(path1, path1->len, path2, 1);
 
-    narr_destroy(direct_path);
-    narr_destroy(path_2);
+    NArr_Clear(outDirectPath);
+    NArr_Append(outDirectPath, 0, path1, 0);
 
-    return path_1;
+    NArr_Destroy(path1);
+    NArr_Destroy(path2);
+
+    return outDirectPath;
 }
 
-int astar_raycast(AStar* astar, Node* start, Node* end)
+int AStar_Raycast(AStar* aStar, Node* start, Node* end)
 {
-    if (astar == NULL)
-    {
-        perror("astar_raycast(): AStar* astar == NULL");
-        exit(1);
-    }
-    if (start == NULL)
-    {
-        perror("astar_raycast(): Node* start == NULL");
-        exit(1);
-    }
-    if (end == NULL)
-    {
-        perror("astar_raycast(): Node* end == NULL");
-        exit(1);
-    }
+    if (aStar == NULL) { errno = EINVAL; return ERR_ASTAR; }
+    if (start == NULL) { errno = EINVAL; return 0; }
+    if (end == NULL) { errno = EINVAL; return 0; }
 
     float vec[] = { (float) (end->x - start->x), (float) (end->y - start->y) };
     int step[] = { float_sign(vec[0]), float_sign(vec[1]) };
@@ -269,7 +253,7 @@ int astar_raycast(AStar* astar, Node* start, Node* end)
     if (start->x == end->x)
     {
         for (int i = 0; i < abs(start->y - end->y); i++)
-            if (!astar->field[start->x][start->y + step[1] * i]->walkable) return 0;
+            if (!aStar->field[start->x][start->y + step[1] * i]->walkable) return 0;
         
         return 1;
     }
@@ -278,7 +262,7 @@ int astar_raycast(AStar* astar, Node* start, Node* end)
     if (start->y == end->y)
     {
         for (int i = 0; i < abs(start->x - end->x); i++)
-            if (!astar->field[start->x + step[0] * i][start->y]->walkable) return 0;
+            if (!aStar->field[start->x + step[0] * i][start->y]->walkable) return 0;
         
         return 1;
     }
@@ -286,53 +270,48 @@ int astar_raycast(AStar* astar, Node* start, Node* end)
     float tan = vec[1] / vec[0];
     float cot = vec[0] / vec[1];
 
-    Node* current_node = start;
+    Node* currentNode = start;
 
     // initial intersection points
     float v_isect[] = { 0.5f * (float) step[0], 0.5f * (float) step[1] * tan };
     float h_isect[] = { 0.5f * (float) step[0] * cot, 0.5f * (float) step[1] };
 
-    while (current_node != end)
+    while (currentNode != end)
     {
-        narr_add(astar->closed_narr, current_node);
-
         float v_dist = sqrtf(v_isect[0] * v_isect[0] + v_isect[1] * v_isect[1]);
         float h_dist = sqrtf(h_isect[0] * h_isect[0] + h_isect[1] * h_isect[1]);
-
-        // Node* node1 = astar->field[current_node->x + step[0]][current_node->y];
-        // Node* node2 = astar->field[current_node->x][current_node->y + step[1]];
         
         // if (!node1->walkable) return 0;
         // if (!node2->walkable) return 0;
 
         if (v_dist < h_dist)
         {
-            current_node = astar->field[current_node->x + step[0]][current_node->y];
+            currentNode = aStar->field[currentNode->x + step[0]][currentNode->y];
             v_isect[0] += (float) step[0];
             v_isect[1] += (float) step[1] * tan;
         }
         else if (v_dist > h_dist)
         {
-            current_node = astar->field[current_node->x][current_node->y + step[1]];
+            currentNode = aStar->field[currentNode->x][currentNode->y + step[1]];
             h_isect[0] += (float) step[0] * cot;
             h_isect[1] += (float) step[1];
         }
         else
         {
-            Node* node1 = astar->field[current_node->x + step[0]][current_node->y];
-            Node* node2 = astar->field[current_node->x][current_node->y + step[1]];
+            Node* node1 = aStar->field[currentNode->x + step[0]][currentNode->y];
+            Node* node2 = aStar->field[currentNode->x][currentNode->y + step[1]];
 
             if (!node1->walkable) return 0;
             if (!node2->walkable) return 0;
 
-            current_node = astar->field[current_node->x + step[0]][current_node->y + step[1]];
+            currentNode = aStar->field[currentNode->x + step[0]][currentNode->y + step[1]];
             v_isect[0] += step[0];
             v_isect[1] += step[1] * tan;
             h_isect[0] += step[0] * cot;
             h_isect[1] += step[1];
         }
 
-        if (!current_node->walkable) return 0;
+        if (!currentNode->walkable) return 0;
     }
 
     return 1;
@@ -342,15 +321,15 @@ int astar_raycast(AStar* astar, Node* start, Node* end)
 // -- Node functions -- //
 //////////////////////////
 
-Node* node_init()
+Node* Node_Init()
 {
-    Node* new_node = (Node*) calloc(1, sizeof(Node));
-    new_node->walkable = 1;
-    new_node->parent = new_node;
-    return new_node;
+    Node* newNode = (Node*) calloc(1, sizeof(Node));
+    newNode->walkable = 1;
+    newNode->parent = newNode;
+    return newNode;
 }
 
-void node_reset(Node* node)
+void Node_Reset(Node* node)
 {
     node->G = 0;
     node->H = 0;
@@ -360,7 +339,7 @@ void node_reset(Node* node)
 
 // calculate G, H and F values
 
-int node_cal_G(Node* node, Node* parent)
+int Node_CalG(Node* node, Node* parent)
 {
     if (node->x == parent->x || node->y == parent->y)
         return parent->G + 10;
@@ -368,7 +347,7 @@ int node_cal_G(Node* node, Node* parent)
     return parent->G + 14;
 }
 
-int node_cal_H(Node* node, Node* dest)
+int Node_CalH(Node* node, Node* dest)
 {
     int delta_x = abs(dest->x - node->x);
     int delta_y = abs(dest->y - node->y);
@@ -379,9 +358,9 @@ int node_cal_H(Node* node, Node* dest)
     return 14 * MINOF(delta_x, delta_y) + 10 * abs(delta_y - delta_x);
 }
 
-void node_cal_F(Node* node, Node* parent, Node* dest)
+void Node_CalF(Node* node, Node* parent, Node* dest)
 {
-    int new_G = node_cal_G(node, parent);
+    int new_G = Node_CalG(node, parent);
 
     if (new_G < node->G || node->G == 0)
     {
@@ -389,11 +368,11 @@ void node_cal_F(Node* node, Node* parent, Node* dest)
         node->parent = parent;
     }
 
-    node->H = node_cal_H(node, dest);
+    node->H = Node_CalH(node, dest);
     node->F = node->G + node->H;
 }
 
-void node_swap(Node** e1, Node** e2)
+void Node_Swap(Node** e1, Node** e2)
 {
     Node* tmp = *e1;
     *e1 = *e2;
@@ -404,15 +383,11 @@ void node_swap(Node** e1, Node** e2)
 // -- NodeArray functions -- //
 ///////////////////////////////
 
-NodeArray* narr_init(int capacity)
+NodeArray* NArr_Init(int capacity)
 {
     NodeArray* narr = (NodeArray*) calloc(1, sizeof(NodeArray));
 
-    if (narr == NULL)
-    {
-        perror("Failed to allocate memory for NodeArray");
-        exit(1);
-    }
+    if (narr == NULL) { return NULL; }
 
     narr->elements = (Node**) calloc(capacity, sizeof(Node*));
     narr->len = 0;
@@ -421,13 +396,11 @@ NodeArray* narr_init(int capacity)
     return narr;
 }
 
-void narr_expand(NodeArray* narr, int add_cap)
+void NArr_Expand(NodeArray* narr, int add_cap)
 {
     if (narr == NULL) return;
-    // if (add_cap <= 0) return;
 
-    if (add_cap <= 0)
-        add_cap = narr->len;
+    if (add_cap <= 0) add_cap = narr->len;
 
     Node** new_elements = (Node**) calloc(narr->cap + add_cap, sizeof(Node*));
     narr->cap += add_cap;
@@ -440,7 +413,7 @@ void narr_expand(NodeArray* narr, int add_cap)
     narr->elements = new_elements;
 }
 
-void narr_balance(NodeArray* narr)
+void NArr_Balance(NodeArray* narr)
 {
     if (narr == NULL) return;
     if (narr->len == 0) return;
@@ -458,7 +431,7 @@ void narr_balance(NodeArray* narr)
 }
 
 // does NOT free the nodes
-void narr_destroy(NodeArray* narr)
+void NArr_Destroy(NodeArray* narr)
 {
     if (narr == NULL) return;
 
@@ -467,18 +440,18 @@ void narr_destroy(NodeArray* narr)
 }
 
 // does free the nodes
-void narr_obliterate(NodeArray* narr)
+void NArr_Obliterate(NodeArray* narr)
 {
     if (narr == NULL) return;
 
     for (int i = 0; i < narr->len; i++)
         free(narr->elements[i]);
 
-    narr_destroy(narr);
+    NArr_Destroy(narr);
 }
 
 // does NOT free the nodes
-void narr_clear(NodeArray* narr)
+void NArr_Clear(NodeArray* narr)
 {
     if (narr == NULL) return;
 
@@ -488,7 +461,7 @@ void narr_clear(NodeArray* narr)
     narr->len = 0;
 }
 
-void narr_set(NodeArray* narr, int i, Node* node)
+void NArr_Set(NodeArray* narr, int i, Node* node)
 {
     if (i < 0) return;
     if (i >= narr->len) return;
@@ -496,27 +469,27 @@ void narr_set(NodeArray* narr, int i, Node* node)
     narr->elements[i] = node;
 }
 
-void narr_add(NodeArray* narr, Node* node)
+void NArr_Add(NodeArray* narr, Node* node)
 {
     if (narr->len >= narr->cap)
-        narr_balance(narr);
+        NArr_Balance(narr);
 
     narr->elements[narr->len] = node;
     narr->len += 1;
 }
 
 // does NOT free the node
-void narr_remove(NodeArray* narr, Node* node)
+void NArr_Remove(NodeArray* narr, Node* node)
 {
     for (int i = 0; i < narr->len; i++)
 
         if (narr->elements[i] == node)
             narr->elements[i] = NULL;
     
-    narr_balance(narr);
+    NArr_Balance(narr);
 }
 
-int narr_contains(NodeArray* narr, Node* node)
+int NArr_Contains(NodeArray* narr, Node* node)
 {
     if (narr == NULL) return 0;
 
@@ -527,15 +500,15 @@ int narr_contains(NodeArray* narr, Node* node)
     return 0;
 }
 
-void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
+void NArr_Append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
 {
-    if (i > narr_1->len) printf("[error] narr_append(): index i out of range\n");
-    if (k >= narr_2->len) printf("[error] narr_append(): index k out of range\n");
+    if (i > narr_1->len) { return; }
+    if (k >= narr_2->len) { return; }
 
     while (i < 0) i += narr_1->len;
     while (k < 0) k += narr_2->len;
 
-    narr_expand(narr_1, narr_2->len);
+    NArr_Expand(narr_1, narr_2->len);
     narr_1->len = i + narr_2->len - k;
 
     while (i < narr_1->cap && k < narr_2->len)
@@ -546,9 +519,9 @@ void narr_append(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
     }
 }
 
-NodeArray* narr_join(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
+NodeArray* NArr_Join(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
 {
-    NodeArray* new_narr = narr_init(narr_1->cap + narr_2->cap);
+    NodeArray* new_narr = NArr_Init(narr_1->cap + narr_2->cap);
 
     while (i < 0) i += narr_1->len;
     while (k < 0) k += narr_2->len;
@@ -565,7 +538,7 @@ NodeArray* narr_join(NodeArray* narr_1, int i, NodeArray* narr_2, int k)
     return new_narr;
 }
 
-void narr_reverse(NodeArray* narr)
+void NArr_Reverse(NodeArray* narr)
 {
     Node* tmp;
     
@@ -577,7 +550,7 @@ void narr_reverse(NodeArray* narr)
     }
 }
 
-void narr_print(NodeArray* narr)
+void NArr_Print(NodeArray* narr)
 {
     printf("[ ");
 
@@ -596,22 +569,22 @@ void narr_print(NodeArray* narr)
 // -- MinHeap functions -- //
 /////////////////////////////
 
-void heap_sortup(NodeArray* heap, int i)
+void Heap_SortUp(NodeArray* heap, int i)
 {
     if (i <= 0) return;
 
     // parent index
     int ip = (i - 1) / 2;
 
-    if (!less_expensive(heap, i, ip)) return;
+    if (!Heap_Compare(heap, i, ip)) return;
 
-    node_swap(&heap->elements[i], &heap->elements[ip]);
-    heap_sortup(heap, ip);
+    Node_Swap(&heap->elements[i], &heap->elements[ip]);
+    Heap_SortUp(heap, ip);
 }
 
-void heap_sortdown(NodeArray* heap)
+void Heap_SortDown(NodeArray* heap)
 {
-    int height = heap_height(heap);
+    int height = Heap_Height(heap);
     int n = heap->len - int_pow(2, height - 1) + 1;
 
     for (int e = height - 1; e > 0; e--)
@@ -625,34 +598,34 @@ void heap_sortdown(NodeArray* heap)
             int ip = (k - 1) / 2;
             int ir = 2 * ip + 2;
 
-            if (less_expensive(heap, k, ir))
+            if (Heap_Compare(heap, k, ir))
             {
-                if (less_expensive(heap, k, ip))
-                    node_swap(&heap->elements[k], &heap->elements[ip]);
+                if (Heap_Compare(heap, k, ip))
+                    Node_Swap(&heap->elements[k], &heap->elements[ip]);
                 
                 continue;
             }
 
-            if (less_expensive(heap, ir, ip))
-                node_swap(&heap->elements[ir], &heap->elements[ip]);
+            if (Heap_Compare(heap, ir, ip))
+                Node_Swap(&heap->elements[ir], &heap->elements[ip]);
         }
 
         n = int_pow(2, e - 1);
     }
 }
 
-void heap_add(NodeArray* heap, Node* node)
+void Heap_Add(NodeArray* heap, Node* node)
 {
     if (heap->len == heap->cap)
-        narr_balance(heap);
+        NArr_Balance(heap);
 
     heap->elements[heap->len] = node;
     heap->len += 1;
 
-    heap_sortup(heap, heap->len - 1);
+    Heap_SortUp(heap, heap->len - 1);
 }
 
-Node* heap_take(NodeArray* heap)
+Node* Heap_Take(NodeArray* heap)
 {
     if (heap->len == 0) return NULL;
 
@@ -664,12 +637,12 @@ Node* heap_take(NodeArray* heap)
     heap->elements[heap->len - 1] = NULL;
     heap->len -= 1;
 
-    narr_balance(heap);
+    NArr_Balance(heap);
 
     return first;
 }
 
-int heap_height(NodeArray* heap)
+int Heap_Height(NodeArray* heap)
 {
     if (heap->len == 0) return 0;
 
@@ -677,7 +650,7 @@ int heap_height(NodeArray* heap)
     return (int) (log((double) heap->len) / log(2.0)) + 1;
 }
 
-int less_expensive(NodeArray* heap, int i, int k)
+int Heap_Compare(NodeArray* heap, int i, int k)
 {
     if (i >= heap->len) return 0;
     if (k >= heap->len) return 1;
@@ -687,9 +660,9 @@ int less_expensive(NodeArray* heap, int i, int k)
     return 1;
 }
 
-void heap_show(NodeArray* heap)
+void Heap_Show(NodeArray* heap)
 {
-    int height = heap_height(heap);
+    int height = Heap_Height(heap);
 
     for (int layer = 0; layer < height; layer++)
     {

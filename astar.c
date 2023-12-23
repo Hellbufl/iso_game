@@ -1,5 +1,15 @@
 #include "astar.h"
 
+int powi(int basis, int exponent)
+{
+    int result = 1;
+
+    for (int i = 0; i < exponent; i++)
+        result *= basis;
+
+    return result;
+}
+
 ////////////////////////
 // -- A* functions -- //
 ////////////////////////
@@ -242,12 +252,12 @@ NodeArray* AStar_FindDirectPathAt(AStar* aStar, NodeArray* path, int first, int 
 
 int AStar_Raycast(AStar* aStar, Node* start, Node* end)
 {
-    if (aStar == NULL) { errno = EINVAL; return ERR_ASTAR; }
-    if (start == NULL) { errno = EINVAL; return 0; }
-    if (end == NULL) { errno = EINVAL; return 0; }
+    if (aStar == NULL)  { errno = EINVAL; return ERR_ASTAR; }
+    if (start == NULL)  { errno = EINVAL; return 0; }
+    if (end == NULL)    { errno = EINVAL; return 0; }
 
     float vec[] = { (float) (end->x - start->x), (float) (end->y - start->y) };
-    int step[] = { float_sign(vec[0]), float_sign(vec[1]) };
+    int step[] = { SIGNOF(vec[0]), SIGNOF(vec[1]) };
 
     // straight in y axis
     if (start->x == end->x)
@@ -585,11 +595,11 @@ void Heap_SortUp(NodeArray* heap, int i)
 void Heap_SortDown(NodeArray* heap)
 {
     int height = Heap_Height(heap);
-    int n = heap->len - int_pow(2, height - 1) + 1;
+    int n = heap->len - powi(2, height - 1) + 1;
 
     for (int e = height - 1; e > 0; e--)
     {
-        int start = int_pow(2, e) - 1;
+        int start = powi(2, e) - 1;
         
         for (int k = start; k < start + n; k++)
         {
@@ -610,7 +620,7 @@ void Heap_SortDown(NodeArray* heap)
                 Node_Swap(&heap->elements[ir], &heap->elements[ip]);
         }
 
-        n = int_pow(2, e - 1);
+        n = powi(2, e - 1);
     }
 }
 
@@ -666,12 +676,12 @@ void Heap_Show(NodeArray* heap)
 
     for (int layer = 0; layer < height; layer++)
     {
-        int max_n = int_pow(2, layer);
-        int spacing = int_pow(2, height - layer);
+        int max_n = powi(2, layer);
+        int spacing = powi(2, height - layer);
 
         for (int i = 0; i < max_n; i++)
         {
-            int arr_i = i + int_pow(2, layer) - 1;
+            int arr_i = i + powi(2, layer) - 1;
             
             if (arr_i >= heap->len) continue;
 

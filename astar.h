@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <errno.h>
-#include "util.h"
+// #include "util.h"
 
 #define TARGET_CAPACITY_FACTOR 2
 #define MAX_CAPACITY_FACTOR 4
@@ -29,7 +29,7 @@ typedef struct Node
 
 typedef struct NodeArray
 {
-    struct Node** elements;
+    Node** elements;
     int len;
     int cap;
 
@@ -50,6 +50,10 @@ typedef struct AStar
     int found;
 
 } AStar;
+
+#define MAXOF(a, b) ((a) * ((a) >= (b)) + (b) * ((b) > (a)))
+#define MINOF(a, b) ((a) * ((a) <= (b)) + (b) * ((b) < (a)))
+#define SIGNOF(x) (((x) > 0) - ((x) < 0))
 
 // -- A* functions -- //
 AStar*      AStar_Init(Node*** initField, int initWidth, int initHeight);
